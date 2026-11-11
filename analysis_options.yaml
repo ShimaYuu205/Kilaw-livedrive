@@ -1,8 +1,0 @@
-include: package:flutter_lints/flutter.yaml
-linter:
-  rules:
-    avoid_print: false
-    prefer_const_constructors: false
-    prefer_const_literals_to_create_immutables: false
-    curly_braces_in_flow_control_structures: false
-    non_constant_identifier_names: false
