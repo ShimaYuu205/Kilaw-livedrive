@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kilaw Dental Clinic</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="style.css?v=20261111d">
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <button id="menuToggle" class="menu-btn" type="button" aria-label="Menu" aria-controls="navDrawer" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="brand">
+      <div class="brand-text">
+        <span class="brand-name">Kilaw Dental Clinic</span>
+        <span class="page-title" id="pageTitle">Antrian</span>
+      </div>
+    </div>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Ganti tema">
+      <span class="theme-toggle-dot"></span>
+    </button>
+  </header>
+
+  <div id="navOverlay" class="nav-overlay"></div>
+  <nav id="navDrawer" class="nav-drawer" aria-label="Menu utama" aria-hidden="true">
+    <div class="drawer-head"><span class="brand-mark" aria-hidden="true">+</span><span class="brand-name">Kilaw Dental Clinic</span></div>
+    <div class="nav-group">Beranda</div>
+    <button class="tab-btn active" type="button" data-tab="tab-antrian" data-label="Antrian"><span class="ni" aria-hidden="true">🏠</span>Antrian</button>
+    <button class="tab-btn" type="button" data-tab="tab-datapasien" data-label="Data Pasien"><span class="ni" aria-hidden="true">👥</span>Data Pasien</button>
+    <div class="nav-group">Rekam Medis</div>
+    <button class="tab-btn" type="button" data-tab="tab-input" data-label="Input"><span class="ni" aria-hidden="true">✍️</span>Input</button>
+    <button class="tab-btn" type="button" data-tab="tab-excel" data-label="Storage"><span class="ni" aria-hidden="true">🗄️</span>Storage</button>
+    <button class="tab-btn" type="button" data-tab="tab-rekap" data-label="Rekap"><span class="ni" aria-hidden="true">📈</span>Rekap</button>
+    <div class="nav-group">Catatan Klinik</div>
+    <button class="tab-btn" type="button" data-tab="tab-prospek" data-label="Prospek WA"><span class="ni" aria-hidden="true">💬</span>Prospek WA</button>
+    <button class="tab-btn" type="button" data-tab="tab-gigitiruan" data-label="Gigi Tiruan"><span class="ni" aria-hidden="true">🦷</span>Gigi Tiruan</button>
+    <button class="tab-btn" type="button" data-tab="tab-stokobat" data-label="Stok Obat"><span class="ni" aria-hidden="true">💊</span>Stok Obat</button>
+    <button class="tab-btn" type="button" data-tab="tab-mutasi" data-label="Riwayat Mutasi"><span class="ni" aria-hidden="true">📦</span>Riwayat Mutasi</button>
+    <div class="nav-group">Laporan & Pengaturan</div>
+    <button class="tab-btn" type="button" data-tab="tab-laporan" data-label="Laporan Bulanan"><span class="ni" aria-hidden="true">📄</span>Laporan Bulanan</button>
+    <button class="tab-btn" type="button" data-tab="tab-sinkron" data-label="Sinkron"><span class="ni" aria-hidden="true">☁️</span>Sinkron</button>
+  </nav>
+
+  <main class="tab-panels">
+    <!-- Antrian (beranda: cari, dokter jaga, pengingat) -->
+    <section id="tab-antrian" class="tab-content active">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M17 17l-3.6-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" autocomplete="off"
+          placeholder="Nama, No.RM, alamat, usia, l/p — pisahkan dengan spasi atau koma">
+        <button id="searchClear" class="search-clear" type="button" aria-label="Bersihkan" hidden>&times;</button>
+      </div>
+      <p class="search-hint">Contoh: <code>3157 nana 17 th cowok</code> atau <code>nana, cowok</code></p>
+      <div id="searchMeta" class="search-meta" hidden></div>
+      <div id="searchResults" class="result-groups"></div>
+      <p id="searchEmpty" class="empty-state">Ketik di kolom pencarian untuk menampilkan data rekam medis pasien.</p>
+      <div id="berandaRest">
+        <div class="jaga-row"><div>Dokter jaga: <b id="jagaNama">belum dipilih</b></div><button type="button" class="btn btn-ghost" id="btnPilihDokter">Pilih Dokter</button></div>
+        <div class="home-actions"><button type="button" class="btn btn-accent" id="btnAntri">＋ Antrian</button><button type="button" class="btn btn-ghost" id="btnGoMutasi">📦 Mutasi</button></div>
+        <div id="aqStrip" class="aq-strip"></div>
+        <h3 class="home-h">Pengingat</h3>
+        <div id="pengingat" class="rem-grid"></div>
+      </div>
+    </section>
+
+    <!-- Data Pasien (papan antrian shift) -->
+    <section id="tab-datapasien" class="tab-content">
+      <div class="row-between"><h3>Data Pasien</h3><div style="display:flex;gap:8px"><button class="btn btn-ghost" id="aqEnd" type="button">End Shift</button><button class="btn btn-accent" id="aqAdd" type="button">＋ Antrian</button></div></div>
+      <p class="hint">Antrian shift ini disimpan di HP dan ikut sinkron ke server klinik secara real-time, lalu baru masuk ke data pasien serta entry saat <b>End Shift</b>. Ketuk status untuk mengubahnya, ketuk kartu untuk melengkapi data.</p>
+      <div id="aqFilters" class="aq-filters"></div>
+      <div id="aqBoard"></div>
+      <div class="import-log" id="aqSync"></div>
+    </section>
+
+    <!-- Laporan -->
+    <section id="tab-laporan" class="tab-content">
+      <div class="panel">
+        <h3>Laporan</h3>
+        <div class="field-col"><label class="field-label" for="lapBulan">Bulan</label><input type="month" id="lapBulan" class="text-input" style="font-family:inherit"></div>
+        <div class="upload-row">
+          <button class="btn btn-accent" id="lapBulanan" type="button">Laporan bulanan</button>
+          <button class="btn btn-accent" id="lapStatus" type="button">Status &amp; stok klinik</button>
+        </div>
+        <p class="hint">Laporan dibuat sebagai surat. Di pratinjau tersedia Cetak, PDF, dan Foto. Sebelum dicetak/disimpan, Anda diminta tanda tangan di kotak konfirmasi. Nama file tetap (<code>Laporan-Bulanan</code> dan <code>Laporan-Status-Clinic</code>), jadi ekspor ulang menggantikan file lama di folder <code>laporan/</code>.</p>
+      </div>
+    </section>
+
+    <!-- Sinkron (Apps Script baru) -->
+    <section id="tab-sinkron" class="tab-content">
+      <div class="panel">
+        <h3>Apps Script (export &amp; cetak ke Drive)</h3>
+        <p class="hint">Data harian sudah real-time lewat server klinik (panel di atas). Apps Script hanya dipakai untuk menaruh hasil <b>export Excel</b> ke folder <code>storage</code> serta hasil <b>cetak/PDF</b> ke folder <code>cetak</code> dan <code>laporan</code> di Drive. Link folder dan token diatur di <i>Script Properties</i> Apps Script.</p>
+        <div class="field-col"><label class="field-label" for="syUrl">URL Web app (berakhiran /exec)</label><input type="text" id="syUrl" class="text-input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false"></div>
+        <div class="field-col"><label class="field-label" for="syTok">Token</label><input type="text" id="syTok" class="text-input" placeholder="Token dari aturKonfigurasi()" autocomplete="off" spellcheck="false"></div>
+        <div class="upload-row">
+          <button class="btn btn-ghost" id="sySave" type="button">Simpan pengaturan</button>
+          <button class="btn btn-ghost" id="syPing" type="button">Tes koneksi</button>
+        </div>
+        <div class="import-log" id="syMsg"></div>
+      </div>
+      <div class="panel">
+        <h3>Ekspor Excel ke folder storage</h3>
+        <p class="hint">Untuk melihat atau mengolah data lengkap di Excel. File dibuat di HP lalu dikirim sekali jalan ke folder <code>storage</code> di Drive. Nama tetap (<code>Data Pasien.xlsx</code>, <code>Entry Harian.xlsx</code>, <code>Kilaw_note.xlsx</code>), jadi ekspor ulang menggantikan yang lama (yang lama masuk tong sampah Drive). Otomatis juga dijalankan saat <b>End Shift</b>. Tidak dipakai untuk sinkron harian.</p>
+        <div class="upload-row">
+          <button class="btn btn-accent" id="syXlAll" type="button">Ekspor semua</button>
+          <button class="btn btn-ghost" id="syXlP" type="button">Pasien</button>
+          <button class="btn btn-ghost" id="syXlE" type="button">Entry</button>
+          <button class="btn btn-ghost" id="syXlN" type="button">Catatan</button>
+        </div>
+        <button class="btn btn-ghost" id="syXlLoad" type="button" style="margin-top:10px">Muat dari Excel di Drive</button>
+        <div class="import-log" id="syMsgX"></div>
+      </div>
+      <div class="panel">
+        <h3>Impor file Excel dari HP</h3>
+        <p class="hint">Untuk memasukkan data awal dari file lama. Isi di HP ini akan ditimpa isi file.</p>
+        <div class="field-col"><label class="field-label" for="syKind">Jenis file</label>
+          <select id="syKind" class="text-input" style="font-family:inherit"><option value="pasien">Data Pasien</option><option value="entry">Entry Harian</option><option value="note">Catatan Klinik (Kilaw_note)</option></select></div>
+        <div class="field-col"><input type="file" id="syFile" accept=".xlsx,.xls" class="text-input"></div>
+        <button class="btn btn-ghost" id="syImp" type="button">Impor</button>
+      </div>
+    </section>
+
+
+
+    <!-- Tab 2: Input Massal -->
+    <section id="tab-input" class="tab-content">
+      <div class="panel">
+        <h3>Input Data Pasien</h3>
+        <p class="hint" id="nextRmHint">No.RM tertinggi saat ini: -</p>
+        <p class="hint">Format satu baris per pasien:</p>
+        <p class="hint-code-scroll"><code>NoFile.Nama.Umur.Alamat.NoTelp.Gender(l/p)</code></p>
+        <p class="hint">Tekan <b>Enter</b> untuk mengisi saran No.RM berikutnya, lalu setiap Enter menambah titik ke kolom selanjutnya.
+          Setelah data lengkap, Enter pindah ke baris baru. Gunakan <b>Shift+Enter</b> untuk baris baru biasa.</p>
+        <textarea id="inputPasienText" spellcheck="false" placeholder="Mulai ketik No.RM, lalu ikuti saran di bawah kolom ini…"></textarea>
+        <div class="smart-hint" id="pasienSmartHint" aria-live="polite"></div>
+        <button class="btn btn-accent" id="btnSavePasien">Simpan / perbarui data pasien</button>
+      </div>
+
+      <div class="panel">
+        <h3>Input Entry Harian</h3>
+        <div class="field-col">
+          <label class="field-label" for="entryDateInput">Tanggal kunjungan (berlaku untuk semua baris di bawah)</label>
+          <input type="date" id="entryDateInput" class="text-input" style="font-family:inherit">
+        </div>
+        <div class="field-col" style="position:relative">
+          <label class="field-label" for="entryPatientSearch">Cari pasien untuk disisipkan ke baris baru</label>
+          <input type="text" id="entryPatientSearch" class="text-input" style="font-family:inherit" autocomplete="off" placeholder="Ketik nama atau No.RM…">
+          <div id="entryPatientSuggestions" class="ac-list" hidden></div>
+        </div>
+        <p class="hint">Format satu baris per kunjungan (tanpa tanggal — dipakai dari tanggal di atas):</p>
+        <p class="hint-code-scroll"><code>NoFile.Nama.Umur.Alamat.Diagnosis/Gigi.Tindakan.Biaya.Paraf</code></p>
+        <p class="hint">Biaya boleh diberi metode bayar: <code>150000(qr)</code>. Tanpa keterangan dianggap cash.
+          Kosongkan paraf atau isi <code>-</code> jika ditangani owner sendiri (tidak perlu paraf).</p>
+        <p class="hint">Ketik No.RM lalu <b>Enter</b> — nama, umur, dan alamat terisi otomatis dari data pasien.
+          Enter di tiap kolom menambah titik; di kolom paraf, Enter kosong berarti Owner dan pindah baris.</p>
+        <textarea id="inputEntryText" spellcheck="false" placeholder="Mulai ketik No.RM, lalu ikuti saran di bawah kolom ini…"></textarea>
+        <div class="smart-hint" id="entrySmartHint" aria-live="polite"></div>
+        <button class="btn btn-accent" id="btnSaveEntry">Simpan entry harian</button>
+      </div>
+    </section>
+
+    <!-- Tab 3: Storage -->
+    <section id="tab-excel" class="tab-content">
+
+      <div class="row-between">
+        <h3>Arsip Pasien <span class="count-pill" id="countPasien">0</span></h3>
+      </div>
+      <div id="pasienPager"></div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr><th>No.RM</th><th>Nama</th><th>Usia</th><th>Alamat</th><th>No.Telp</th><th>Gender</th><th>Status</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="bodyDataPasien"></tbody>
+        </table>
+      </div>
+
+      <div class="row-between" style="margin-top:26px">
+        <h3>Entry Harian <span class="count-pill" id="countEntry">0</span></h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="filterEntryMonth" class="text-input" style="padding: 6px 10px; font-size: 12px; width: auto; font-family:inherit;">
+            <option value="last_7">7 Hari Terakhir</option>
+            <option value="last_month">1 Bulan Terakhir (30 hari)</option>
+            <option value="all">Semua Data</option>
+          </select>
+        </div>
+      </div>
+      <input type="search" id="searchEntry" class="text-input" placeholder="Cari nama / No.RM / tindakan (mis. odon)" autocomplete="off" style="margin-bottom:6px">
+      <p class="hint" id="entryResultInfo" style="margin-top:0"></p>
+      <p class="hint">Diurutkan menurut tanggal (terbaru di atas). Entri susulan untuk tanggal yang sudah lewat otomatis masuk
+        di barisan tanggalnya. Pencarian berlaku pada periode yang dipilih di kanan. Pengiriman ke Drive lewat tab Sinkron selalu memuat semua data dan menyertakan rekap bulanan.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr><th>Tanggal</th><th>No.RM</th><th>Nama</th><th>Gigi/Diagnosa</th><th>Tindakan</th><th>Biaya</th><th>Metode</th><th>Paraf</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="bodyEntryHarian"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tab 4: Rekap -->
+    <section id="tab-rekap" class="tab-content">
+      <div class="field-col">
+        <label class="field-label" for="rekapDateInput">Tanggal acuan (rekap hari &amp; bulan mengikuti tanggal ini)</label>
+        <input type="date" id="rekapDateInput" class="text-input" style="font-family:inherit">
+      </div>
+
+      <h3 class="section-title" id="rekapDayTitle">Tanggal terpilih</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><h4>Pendapatan</h4><div class="amount" id="incomeToday">Rp 0</div></div>
+        <div class="stat-card"><h4>Cash</h4><div class="amount amount-cash" id="cashToday">Rp 0</div></div>
+        <div class="stat-card"><h4>QR / Transfer</h4><div class="amount amount-qr" id="qrToday">Rp 0</div></div>
+      </div>
+      <div id="dayParafSection"></div>
+
+      <h3 class="section-title" id="rekapMonthTitle">Bulan berjalan</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><h4>Pendapatan</h4><div class="amount" id="incomeMonth">Rp 0</div></div>
+        <div class="stat-card"><h4>Cash</h4><div class="amount amount-cash" id="cashMonth">Rp 0</div></div>
+        <div class="stat-card"><h4>QR / Transfer</h4><div class="amount amount-qr" id="qrMonth">Rp 0</div></div>
+      </div>
+      <h3 class="section-title">Pasien baru bulan ini</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><h4>Jumlah pasien baru</h4><div class="amount" id="newPatientsMonth">0</div></div>
+        <div class="stat-card"><h4>Total kunjungan bulan ini</h4><div class="amount" id="visitsMonth">0</div></div>
+        <div class="stat-card"><h4>Tindakan</h4><div class="amount" id="tindakanMonthTotal">0</div></div>
+        <div class="stat-card"><h4>Premedikasi</h4><div class="amount" id="premedMonthTotal">0</div></div>
+      </div>
+      <h3 class="section-title">Rincian per paraf (bulan berjalan)</h3>
+      <div class="stats-grid" id="parafCardsGrid"></div>
+    </section>
+
+  
+
+
+    <!-- Tab: Prospek Pasien WA -->
+    <section id="tab-prospek" class="tab-content note-ui">
+      <div class="row-between" style="margin-bottom:14px;">
+        <h3>Prospek &amp; Rencana Kedatangan <span class="count-pill" id="countProspek">0</span></h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-accent" id="btnOpenAddProspek" style="padding:8px 14px;font-size:13px;">+ Tambah Prospek</button>
+        </div>
+      </div>
+      <div id="bodyProspek" class="cards-container"></div>
+    </section>
+
+    <!-- Tab: Gigi Tiruan -->
+    <section id="tab-gigitiruan" class="tab-content note-ui">
+      <div class="row-between" style="margin-bottom:14px;">
+        <h3>Pengingat Pekerjaan Gigi Tiruan <span class="count-pill" id="countGigi">0</span></h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-accent" id="btnOpenAddGigi" style="padding:8px 14px;font-size:13px;">+ Tambah Gigi Tiruan</button>
+        </div>
+      </div>
+      <p class="hint">Tap tahap yang sudah beres (dibayar → dikirim → diterima → insersi). Yang paling lama menunggu ada di atas; tanpa perubahan lebih dari 7 hari ditandai macet.</p>
+      <div id="gigiChips" class="filter-chips-row"></div>
+      <div id="bodyGigi" class="cards-container"></div>
+    </section>
+
+    <!-- Tab: Odontogram -->
+    <section id="tab-odontogram" class="odo-pop note-ui" hidden><div class="odo-head"><b>Odontogram</b><button type="button" id="odoClose" class="btn btn-ghost">✕ Tutup</button></div>
+<div id="odo">
+<div id="odoNav" class="nv"><button data-t="Main" class="on">Odontogram</button><button data-t="Harga">Harga</button></div>
+<div id="odoMain" class="pane on">
+<div class="card"><div class="g2">
+<label>No. RM<input id="odoRm"></label><label>Nama<input id="odoNama"></label>
+<label>Alamat<input id="odoAlamat"></label><label>No. Telp<input id="odoTelp" type="tel"></label></div>
+<button id="odoToRM" class="sec">💾 Simpan ke rekam medis</button> <button id="odoBaru" class="sec">Pasien baru (hapus semua)</button></div>
+<div id="odoModes">
+<button class="mode" data-m="tambal" style="--c:#eab308">Tambal</button>
+<button class="mode" data-m="exo" style="--c:#dc2626">EXO</button>
+<button class="mode" data-m="cabut" style="--c:#555">Dicabut</button>
+<button class="mode" data-m="gt" style="--c:#f472b6">GT</button>
+<button class="mode" data-m="hapus" style="--c:#64748b">Hapus</button></div>
+<div id="odoExoKind" class="chips" style="display:none"></div>
+<div class="zoom"><button class="sec" id="odoZm">−</button><button class="sec" id="odoZf">Pas layar</button><button class="sec" id="odoZp">+</button><span id="odoZl"></span></div>
+<div class="chartwrap"><svg id="odoChart" viewBox="0 0 608 285"></svg></div>
+<div class="row2"><button class="sec" id="odoFullA">Full RA</button><button class="sec" id="odoFullB">Full RB</button></div>
+<button class="sec" id="odoClr">Kosongkan bagan</button>
+<p class="hint">Pilih mode, ketuk gigi. Mode Hapus membatalkan semua tanda pada gigi yang diketuk. Tambal: 1x PR, 2x PI, 3x NP, 4x batal. Mode lain: ketuk lagi untuk batal. Full RA/RB menandai gigi 1-6 satu rahang sebagai GT. Mode EXO: pilih EXO umum atau Odontectomy dulu.</p>
+<div id="odoCards"></div>
+<div class="card"><h3>Tindakan lain</h3><div id="odoExList"></div><div class="g2"><select id="odoExSel"></select><input type="number" id="odoExQty" min="1" value="1"></div><button id="odoExAdd" class="sec">+ Tambah</button></div>
+<div class="card"><h3>Catatan</h3><pre id="odoNotes"></pre><div id="odoOpts"></div>
+<div class="row2"><button id="odoDocO" class="sec">🦷 Odontogram + catatan</button><button id="odoDocN" class="sec">🧾 Nota rincian biaya</button></div>
+<div class="card" id="odoRinci"></div>
+<div id="odoBar"><div><small>Total</small><b id="odoTotal">Rp 0</b></div><button id="odoSave">Simpan</button></div>
+</div>
+<div id="odoHarga" class="pane"><h2>Daftar Harga</h2><div id="odoHbox"></div>
+<button id="odoHreset" class="sec">Kembalikan harga awal</button></div>
+<div id="odoDlg" class="dlg" style="display:none"><div class="card">
+<h3>Simpan ke mana?</h3><p class="hint" id="odoDlgHint"></p>
+<label>Tanggal datang (untuk prospek, opsional)<input type="date" id="odoPrTgl"></label>
+<label>Shift<select id="odoPrShift"><option value="">- Tidak ditentukan -</option><option value="Pagi">Pagi</option><option value="Sore">Sore</option></select></label>
+<button id="odoToGt">Gigi Tiruan</button><button id="odoToPr">Prospek</button><button id="odoToBoth">Keduanya</button><button id="odoDlgX" class="sec">Batal</button></div></div>
+</div>
+    </section>
+
+    <!-- Tab: Stok Obat & Bahan -->
+    <section id="tab-stokobat" class="tab-content note-ui">
+      <div class="stats-grid">
+        <div class="stat-card"><h4>Total Item Terdaftar</h4><div class="amount" id="stokTotalItem">0</div></div>
+        <div class="stat-card"><h4>Total Unit Stok Fisik</h4><div class="amount" id="stokTotalUnit">0</div></div>
+        <div class="stat-card"><h4>Item Kritis / Habis</h4><div class="amount amount-qr" id="stokKritisCount">0</div></div>
+      </div>
+
+      <div class="filter-chips-row">
+        <button class="filter-chip active" data-filter="semua">Semua</button>
+        <button class="filter-chip" data-filter="aman">Aman</button>
+        <button class="filter-chip" data-filter="kritis">Kritis</button>
+        <button class="filter-chip" data-filter="habis">Habis</button>
+      </div>
+
+      <div class="row-between" style="margin-bottom:14px;">
+        <h3>Stok Obat &amp; Bahan <span class="count-pill" id="countStok">0</span></h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-accent" id="btnOpenAddStok" style="padding:8px 14px;font-size:13px;">+ Tambah Stok</button>
+        </div>
+      </div>
+      <input type="search" id="stokSearch" class="text-input" placeholder="🔍 Cari nama obat / bahan…" autocomplete="off" style="margin-bottom:10px;">
+      <p class="hint">Ketuk salah satu item untuk melihat rincian stok (awal, masuk, keluar, expired). Masuk/Keluar/Akhir dihitung otomatis dari log Mutasi Stok.</p>
+      <div id="bodyStok" class="stok-list"></div>
+
+      <div class="panel" style="margin-top:18px;">
+        <h3>🛒 Pengingat Stok yang Harus Segera Dibeli <span class="count-pill" id="countBeli">0</span></h3>
+        <p class="hint">Centang jika sudah dibeli. Bisa juga ditambah lewat tombol "Tambah ke daftar beli" pada rincian item stok.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <input type="text" id="beliNama" class="text-input" placeholder="Nama bahan" style="flex:2;min-width:150px;" autocomplete="off" list="mutasiNamaList">
+          <input type="date" id="beliTanggal" class="text-input" style="flex:1;min-width:130px;">
+          <button class="btn btn-accent" id="btnAddBeli" type="button">+ Tambah</button>
+        </div>
+        <div id="bodyBeli"></div>
+      </div>
+    </section>
+
+    <!-- Tab: Mutasi Stok -->
+    <section id="tab-mutasi" class="tab-content note-ui">
+      <div class="home-actions" style="margin-bottom:10px"><button type="button" class="btn btn-accent" id="btnOpenMutasiPopup">📦 Catat Mutasi</button></div>
+      <div class="panel" id="panelMutasi" style="display:none">
+        <h3 id="mutasiFormTitle">Catat Transaksi Masuk / Keluar</h3>
+        <div class="form-2col">
+          <div class="edit-field">
+            <label class="field-label">Tanggal</label>
+            <input type="date" id="mutasiTanggal" class="text-input">
+          </div>
+          <div class="edit-field">
+            <label class="field-label">Jenis Mutasi</label>
+            <select id="mutasiJenis" class="custom-select">
+              <option value="MASUK">▲ MASUK</option>
+              <option value="KELUAR">▼ KELUAR</option>
+            </select>
+          </div>
+        </div>
+        <div class="edit-field">
+          <label class="field-label">Nama Obat / Bahan</label>
+          <input type="text" id="mutasiNama" class="text-input" autocomplete="off" list="mutasiNamaList">
+          <datalist id="mutasiNamaList"></datalist>
+          <div id="mutasiHint" class="hint"></div>
+        </div>
+        <div class="form-2col">
+          <div class="edit-field">
+            <label class="field-label">Jumlah (Qty)</label>
+            <input type="text" inputmode="decimal" id="mutasiJumlah" class="text-input">
+          </div>
+          <div class="edit-field" id="mutasiExpiredWrap">
+            <label class="field-label">Expired (mis. 9/2026)</label>
+            <input type="text" id="mutasiExpired" class="text-input">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-accent" id="btnSaveMutasi" type="button" style="flex:1 1 140px">Simpan Transaksi</button>
+          <button class="btn btn-ghost" id="btnCancelMutasi" hidden>Batal Edit</button>
+        </div>
+      </div>
+
+      <div class="row-between">
+        <h3>Log Transaksi <span class="count-pill" id="countMutasi">0</span></h3>
+      </div>
+      <div class="filter-chips-row" id="mutasiChips">
+        <button class="mchip active" data-mfilter="semua">Semua <span id="mcSemua">0</span></button>
+        <button class="mchip" data-mfilter="MASUK">▲ Masuk <span id="mcMasuk">0</span></button>
+        <button class="mchip" data-mfilter="KELUAR">▼ Keluar <span id="mcKeluar">0</span></button>
+      </div>
+      <input type="search" id="mutasiSearch" class="text-input" placeholder="🔍 Cari nama obat / bahan…" autocomplete="off" style="margin-bottom:10px;">
+      <div id="bodyMutasi" class="mut-list"></div>
+    </section>
+
+  </main>
+
+
+  <!-- Modal detail pasien -->
+  <div id="editEntryModal" class="modal-backdrop" hidden style="display:none">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editEntryTitle">
+      <button class="modal-close" id="editEntryClose" type="button" aria-label="Tutup">&times;</button>
+      <div class="modal-head">
+        <h3 id="editEntryTitle">Edit Entry Harian</h3>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Tanggal</label>
+        <input type="date" id="editEntryTanggal" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">No. RM</label>
+        <input type="text" id="editEntryRm" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Nama</label>
+        <input type="text" id="editEntryNama" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Usia</label>
+        <input type="text" id="editEntryUmur" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Alamat</label>
+        <input type="text" id="editEntryAlamat" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Gigi / Diagnosa</label>
+        <input type="text" id="editEntryGigi" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Tindakan</label>
+        <input type="text" id="editEntryTindakan" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Biaya</label>
+        <input type="text" inputmode="numeric" id="editEntryBiaya" class="text-input" style="font-family:inherit">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Pembayaran campur / bank (opsional)</label>
+        <input type="text" id="editEntryBayar" class="text-input" placeholder="cash 200, qr 250 bca" autocomplete="off" style="font-family:inherit">
+        <p class="hint" style="margin-top:4px;">Kalau diisi, menggantikan Biaya &amp; Metode di bawah. Contoh: <b>cash 200, qr 250 bca</b></p>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Metode bayar</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-ghost" id="editEntryCash" style="flex:1">Cash</button>
+          <button type="button" class="btn btn-ghost" id="editEntryQr" style="flex:1">QR</button>
+        </div>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Paraf (kosongkan jika ditangani Owner)</label>
+        <input type="text" id="editEntryParaf" class="text-input" style="font-family:inherit">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn btn-accent" id="editEntrySave" style="flex:1">Simpan</button>
+        <button class="btn btn-ghost" id="editEntryCancel">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal-backdrop" hidden style="display:none">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailName">
+      <button class="modal-close" id="detailClose" type="button" aria-label="Tutup">&times;</button>
+      <div class="modal-head">
+        <h3 id="detailName">-</h3>
+        <span id="detailBadge" class="badge" hidden>Data belum lengkap</span>
+        <button type="button" class="btn btn-ghost" id="detailEditBtn" style="margin-left:auto; padding:6px 12px; font-size:12px; white-space:nowrap;">Edit</button>
+      </div>
+      <div class="detail-grid">
+        <div><span class="detail-label">No. RM</span><span id="detailRM" class="detail-value">-</span></div>
+        <div><span class="detail-label">Usia</span><span id="detailUmur" class="detail-value">-</span></div>
+        <div><span class="detail-label">Gender</span><span id="detailGender" class="detail-value">-</span></div>
+        <div><span class="detail-label">Alamat</span><span id="detailAlamat" class="detail-value">-</span></div>
+        <div><span class="detail-label">No. Telp</span><span id="detailTelp" class="detail-value">-</span></div>
+        <div><span class="detail-label">Total kunjungan</span><span id="detailVisits" class="detail-value">-</span></div>
+      </div>
+      <div id="detailExtra"></div>
+      <h4 class="detail-history-title">Riwayat perawatan</h4>
+      <div class="table-scroll">
+        <table class="data-table" id="detailHistoryTable">
+          <thead><tr><th>Tanggal</th><th>Gigi/Diagnosa</th><th>Tindakan</th><th>Biaya</th><th>Paraf</th></tr></thead>
+          <tbody id="detailHistoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  
+
+
+  <!-- MODAL POP-UP PROSPEK -->
+  <div id="modalProspek" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <button class="modal-close" id="btnCloseProspek">&times;</button>
+      <h3 id="prospekFormTitle" style="margin-bottom:14px;">Tambah Rencana Kedatangan</h3>
+      <div class="edit-field">
+        <label class="field-label">Nama Pasien (WA)</label>
+        <input type="text" id="prospekNama" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">No. Telepon / WA</label>
+        <input type="text" id="prospekTelp" class="text-input" placeholder="- jika tidak ada">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Rencana Tanggal Datang</label>
+        <input type="date" id="prospekTanggal" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Shift Kedatangan</label>
+        <select id="prospekShift" class="custom-select">
+          <option value="">- Tidak ditentukan -</option>
+          <option value="Pagi">Pagi</option>
+          <option value="Sore">Sore</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Rencana Perawatan</label>
+        <input type="text" id="prospekRencana" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Status Konfirmasi</label>
+        <div id="prospekStatusSeg"></div>
+        <select id="prospekStatus" class="custom-select" style="display:none">
+          <option value="Belum Fix">Belum Fix</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Batal">Batal</option>
+        </select>
+      </div>
+      <button class="btn btn-accent" id="btnSaveProspek" style="width:100%;margin-top:6px;">Simpan Prospek</button>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP GIGI TIRUAN -->
+  <div id="modalGigi" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <button class="modal-close" id="btnCloseGigi">&times;</button>
+      <h3 id="gigiFormTitle" style="margin-bottom:14px;">Tambah Pekerjaan Gigi Tiruan</h3>
+      <div class="edit-field">
+        <label class="field-label">Nama Pasien</label>
+        <input type="text" id="gigiNama" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Jenis Gigi Tiruan</label>
+        <input type="text" id="gigiJenis" class="text-input" placeholder="mis. Valplast RA">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Catatan Khusus</label>
+        <input type="text" id="gigiCatatan" class="text-input">
+      </div>
+      <button class="btn btn-accent" id="btnSaveGigi" style="width:100%;margin-top:6px;">Simpan Gigi Tiruan</button>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP STOK OBAT -->
+  <div id="modalStok" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <button class="modal-close" id="btnCloseStok">&times;</button>
+      <h3 id="stokFormTitle" style="margin-bottom:14px;">Tambah Item Stok</h3>
+      <div class="edit-field">
+        <label class="field-label">Kategori</label>
+        <input type="text" id="stokKategori" class="text-input" list="stokKategoriList" placeholder="mis. Obat Tablet/Kapsul">
+        <datalist id="stokKategoriList"></datalist>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Nama Obat / Bahan</label>
+        <input type="text" id="stokNama" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Stok Awal</label>
+        <input type="text" inputmode="numeric" id="stokAwal" class="text-input">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Satuan</label>
+        <input type="text" id="stokSatuan" class="text-input" placeholder="mis. box/10 strip">
+      </div>
+      <div class="edit-field">
+        <label class="field-label">Expired</label>
+        <input type="text" id="stokExpired" class="text-input" placeholder="mis. 2028, 2029">
+      </div>
+      <button class="btn btn-accent" id="btnSaveStok" style="width:100%;margin-top:6px;">Simpan Item Stok</button>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP NOTIFY -->
+
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+  <script src="app.js?v=20261111d"></script>
+<script src="sync.js?v=20261111d"></script>
+  <script>
+    setTimeout(function () {
+      if (window.__KILAW_BUILD !== '20261111c') {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:999;background:#b42318;color:#fff;padding:12px;border-radius:10px;font:13px/1.4 sans-serif';
+        d.textContent = 'app.js di perangkat masih versi lama atau gagal dimuat. Ganti index.html, style.css, dan app.js sekaligus, lalu muat ulang.';
+        document.body.appendChild(d);
+      }
+    }, 1500);
+  </script>
+</body>
+</html>
+
+
